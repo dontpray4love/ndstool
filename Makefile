@@ -14,7 +14,6 @@ SOURCES		:=	source
 INCLUDES	:=	include
 DATA			:=	data
 
-export PATH		:=	$(DEVKITARM)/bin:$(PATH)
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
@@ -27,23 +26,21 @@ CFLAGS	:=	$(DEBUGFLAGS) -Wall -O3
 CFLAGS	+=	$(INCLUDE)
 
 
-LDFLAGS	=	$(DEBUGFLAGS) -Wl,--strip-debug
+LDFLAGS	=	$(DEBUGFLAGS)
 
 ifneq (,$(findstring MINGW,$(UNAME)))
 	PLATFORM	:= win32
 	EXEEXT		:= .exe
-	CFLAGS		+= -mno-cygwin
-	LDFLAGS		+= -mno-cygwin
+	LDFLAGS		+= -static -Wl,--strip-debug
 endif
 
 ifneq (,$(findstring CYGWIN,$(UNAME)))
-	CFLAGS		+= -mno-cygwin
-	LDFLAGS		+= -mno-cygwin
 	EXEEXT		:= .exe
+	LDFLAGS		+= -Wl,--strip-debug
 endif
 
 ifneq (,$(findstring Linux,$(UNAME)))
-	LDFLAGS 	+= -static
+	LDFLAGS 	+= -static -Wl,--strip-debug
 endif
 
 CXXFLAGS	=	$(CFLAGS) -fno-rtti -fno-exceptions
@@ -70,8 +67,7 @@ export OUTPUTDIR:=	$(CURDIR)
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
-			$(CURDIR)/DefaultArm7 $(CURDIR)/Loader
+			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
 
 export CC	:=	$(PREFIX)gcc
 export CXX	:=	$(PREFIX)g++
@@ -84,7 +80,7 @@ export OBJCOPY	:=	$(PREFIX)objcopy
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-BINFILES	:=	default_arm7.bin loadme.bin $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.bin)))
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.bin)))
 BMPFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.bmp)))
 
 export OFILES	:= $(BINFILES:.bin=.o) $(BMPFILES:.bmp=.o)  $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
@@ -112,13 +108,9 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
 #---------------------------------------------------------------------------------
 $(BUILD):
-	@echo $(PATH)
 	@[ -d $@ ] || mkdir -p $@
 	@make PassMeIncludes
-	@make -C DefaultArm7
-	@make -C Loader
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-	@./ndstool -@ DefaultArm7/default_arm7.bin && echo For official devkitPro releases, add this SHA1 hash of default ARM7 binary to data/arm7_sha1_homebrew.bin and recompile. || echo -n
 
 #---------------------------------------------------------------------------------
 .PHONY: PassMeIncludes
@@ -133,8 +125,6 @@ $(BUILD)/passme_vhd2.h: $(SOURCES)/passme.vhd
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@make -C DefaultArm7 clean
-	@make -C Loader clean
 	@rm -fr $(BUILD) $(OUTPUT)
 
 #---------------------------------------------------------------------------------
@@ -158,7 +148,6 @@ DEPENDS	:=	$(OFILES:.o=.d)
 $(OUTPUT): $(OFILES)
 	@echo linking
 	@$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $(OUTPUT)$(EXEEXT)
-	-@( cd $(OUTPUTDIR); upx -q -9 $(TARGET)$(EXEEXT) )
 
 #---------------------------------------------------------------------------------
 # Compile Targets for C/C++

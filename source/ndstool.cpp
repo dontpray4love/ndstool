@@ -51,7 +51,6 @@ unsigned int arm7Entry = 0;
 void Title()
 {
 	printf("Nintendo DS rom tool "VER" - %s %s by Rafael Vuijk (aka DarkFader)\n",CompileDate,CompileTime);
-	if (EncryptSecureArea) printf("WARNING: This is a private version!\n");
 }
 
 /*
@@ -77,7 +76,6 @@ void Help(char *unknownoption = 0)
 	printf("Hook ARM7 executable   -k [file.nds]                  see manual\n");
 	printf("Fix header CRC         -f [file.nds]\n");
 	//printf("Test                   -T [file.nds]\n");
-	if (EncryptSecureArea) printf("En/decrypt secure area -s [file.nds]\n");
 	//printf("Sign multiboot         -n [file.nds]");
 	//printf("Hash file & compare:   -@ [arm7.bin]\n");		// used in buildscript
 	printf("List files:            -l [file.nds]\n");
@@ -122,7 +120,6 @@ void Help(char *unknownoption = 0)
 enum {
 	ACTION_SHOWINFO,
 	ACTION_FIXHEADERCRC,
-	ACTION_ENCRYPTSECUREAREA,
 	ACTION_PASSME,
 	ACTION_LISTFILES,
 	ACTION_EXTRACT,
@@ -164,16 +161,6 @@ int main(int argc, char *argv[])
 					ADDACTION(ACTION_FIXHEADERCRC);
 					OPTIONAL(ndsfilename);
 					break;
-				}
-
-				case 's':	// en-/decrypt secure area
-				{
-					if (EncryptSecureArea)
-					{
-						ADDACTION(ACTION_ENCRYPTSECUREAREA);
-						OPTIONAL(ndsfilename);
-						break;
-					}
 				}
 
 				case 'p':	// PassMe
@@ -413,10 +400,6 @@ int main(int argc, char *argv[])
 				Hook(ndsfilename, arm7filename);
 				break;
 			}
-
-			case ACTION_ENCRYPTSECUREAREA:
-				/*status =*/ EnDecryptSecureArea(ndsfilename);
-				break;
 		}
 	}
 

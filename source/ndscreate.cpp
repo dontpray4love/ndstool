@@ -1,12 +1,10 @@
 #include <time.h>
 #include <ndstool.h>
 #include <ndstool_version.h>
-#include "default_arm7.h"
 #include "logo.h"
 #include "raster.h"
 #include "banner.h"
 #include "overlay.h"
-#include "loadme.h"
 #include "ndstree.h"
 
 unsigned int overlay_files = 0;
@@ -321,10 +319,8 @@ void Create()
 	}
 	else if (!headerfilename)	// homebrew?
 	{
-		if (loadme_size != 156) { fprintf(stderr, "loadme size error\n"); exit(1); }
-		memcpy(header.logo, loadme, loadme_size);		// self-contained NDS loader for *Me GBA cartridge boot
-		memcpy(&header.offset_0xA0, "SRAM_V110", 9);		// allow GBA cartridge SRAM backup
-		memcpy(&header.offset_0xAC, "PASS01\x96", 7);		// automatically start with FlashMe, make it look more like a GBA rom
+		fprintf(stderr, "Cannot add loadme\n");
+		exit(1);
 	}
 
 	// unique ID... just for homebrew, not very used... obsolete?
@@ -433,10 +429,8 @@ void Create()
 	}
 	else	// default ARM7 binary
 	{
-		fwrite(default_arm7, 1, default_arm7_size, fNDS);
-		header.arm7_entry_address = 0x03800000;
-		header.arm7_ram_address = 0x03800000;
-		header.arm7_size = ((default_arm7_size + 3) & ~3);
+		fprintf(stderr, "Cannot add default ARM7 binary\n");
+		exit(1);
 	}
 
 	// ARM7 overlay table
